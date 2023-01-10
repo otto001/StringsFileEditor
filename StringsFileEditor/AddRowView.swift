@@ -9,7 +9,7 @@ import SwiftUI
 
 
 struct AddRowView: View {
-    @EnvironmentObject var viewModel: ViewModel
+    @EnvironmentObject var viewModel: DocumentViewModel
     
     @State var key = ""
     @State var translations = Document.Translations()
@@ -18,52 +18,65 @@ struct AddRowView: View {
         viewModel.document!
     }
     
-    var languages: [String] {
-        return document.languages
+    var languages: [Document.LanguageCode] {
+        return Array(document.languages).sorted()
     }
     
+    private func submit() {
+        viewModel.setTranslations(key: key, translations: translations)
+        viewModel.showAddRowDialog = false
+    }
+
+    
     var body: some View {
-        
-        Form {
-            Text("Add Row").font(.title).frame(maxWidth: .infinity, alignment: .leading)
+        NavigationStack {
             
-            TextField("Key", text: $key)
-            
-            ForEach(languages, id: \.self) { langCode in
-                TextField(langCode, text: Binding {
-                    return translations[langCode] ?? "-"
-                } set: { val, _ in
-                    translations[langCode] = val
-                })
-            }
-            
-            HStack {
-                Button(role: .cancel) {
-                    viewModel.showAddRowDialog = false
-                } label: {
-                    Text("Cancel")
+            Form {
+                
+                Section {
+                    TextField("Key", text: $key)
                 }
-                Spacer()
-                Button {
-                    viewModel.addKey(key: key, translations: translations)
-
-                    viewModel.showAddRowDialog = false
-                } label: {
-                    Text("Add")
+                
+                Section {
+                    ForEach(languages) { language in
+                        TextField(language.string, text: Binding {
+                            return translations[language] ?? "-"
+                        } set: { val, _ in
+                            translations[language] = val
+                        })
+                    }
                 }
             }
-            
-
+            .onSubmit {
+                submit()
+            }
+            .formStyle(.grouped)
+            .fixedSize(horizontal: false, vertical: true)
+            .navigationTitle("Add Row")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button {
+                        submit()
+                    } label: {
+                        Text("Add")
+                    }
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(role: .cancel) {
+                        viewModel.showAddRowDialog = false
+                    } label: {
+                        Text("Cancel")
+                    }
+                }
+            }
         }
         .frame(minWidth: 400)
-        .padding()
-
     }
 
 }
 
 struct AddRowView_Previews: PreviewProvider {
     static var previews: some View {
-        AddRowView().environmentObject(ViewModel.preview)
+        AddRowView().environmentObject(DocumentViewModel.preview)
     }
 }

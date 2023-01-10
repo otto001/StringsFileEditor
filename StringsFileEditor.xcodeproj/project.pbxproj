@@ -11,7 +11,7 @@
 		02A5BB0929688FF5007AC6BE /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A5BB0829688FF5007AC6BE /* ContentView.swift */; };
 		02A5BB0B29688FF7007AC6BE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 02A5BB0A29688FF7007AC6BE /* Assets.xcassets */; };
 		02A5BB0E29688FF7007AC6BE /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 02A5BB0D29688FF7007AC6BE /* Preview Assets.xcassets */; };
-		02A5BB1629689033007AC6BE /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A5BB1529689032007AC6BE /* ViewModel.swift */; };
+		02A5BB1629689033007AC6BE /* DocumentViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A5BB1529689032007AC6BE /* DocumentViewModel.swift */; };
 		02A5BB1829689050007AC6BE /* Document.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A5BB1729689050007AC6BE /* Document.swift */; };
 		02A5BB1A29689DAE007AC6BE /* DocumentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02A5BB1929689DAE007AC6BE /* DocumentView.swift */; };
 		02C6D6832968C05600FE1116 /* EditableText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02C6D6822968C05600FE1116 /* EditableText.swift */; };
@@ -25,7 +25,7 @@
 		02A5BB0A29688FF7007AC6BE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		02A5BB0D29688FF7007AC6BE /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		02A5BB0F29688FF7007AC6BE /* StringsFileEditor.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = StringsFileEditor.entitlements; sourceTree = "<group>"; };
-		02A5BB1529689032007AC6BE /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
+		02A5BB1529689032007AC6BE /* DocumentViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentViewModel.swift; sourceTree = "<group>"; };
 		02A5BB1729689050007AC6BE /* Document.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		02A5BB1929689DAE007AC6BE /* DocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DocumentView.swift; sourceTree = "<group>"; };
 		02C6D6822968C05600FE1116 /* EditableText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableText.swift; sourceTree = "<group>"; };
@@ -64,7 +64,7 @@
 			children = (
 				02A5BB0629688FF5007AC6BE /* StringsFileEditorApp.swift */,
 				02A5BB0829688FF5007AC6BE /* ContentView.swift */,
-				02A5BB1529689032007AC6BE /* ViewModel.swift */,
+				02A5BB1529689032007AC6BE /* DocumentViewModel.swift */,
 				02A5BB1729689050007AC6BE /* Document.swift */,
 				02A5BB1929689DAE007AC6BE /* DocumentView.swift */,
 				02C6D6822968C05600FE1116 /* EditableText.swift */,
@@ -156,7 +156,7 @@
 			files = (
 				02A5BB1829689050007AC6BE /* Document.swift in Sources */,
 				02A5BB0929688FF5007AC6BE /* ContentView.swift in Sources */,
-				02A5BB1629689033007AC6BE /* ViewModel.swift in Sources */,
+				02A5BB1629689033007AC6BE /* DocumentViewModel.swift in Sources */,
 				02A5BB0729688FF5007AC6BE /* StringsFileEditorApp.swift in Sources */,
 				02C6D6852968C0B600FE1116 /* AddRowView.swift in Sources */,
 				02C6D6832968C05600FE1116 /* EditableText.swift in Sources */,
@@ -294,6 +294,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Strings File Editor";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -321,6 +323,8 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Strings File Editor";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

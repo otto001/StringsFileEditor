@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var viewModel: ViewModel
-    
+    @EnvironmentObject var viewModel: DocumentViewModel
     
     var body: some View {
         if viewModel.document != nil {

@@ -10,15 +10,13 @@ import Foundation
 
 struct Document {
 
-    var languages = [String]()
-    private(set) var entries: [Key: Translations]
-    private(set) var keys: [Key]
-    private var fileURLs = [String: URL]()
+    private(set) var languages = Set<LanguageCode>()
+    private(set) var entries = [Key: Translations]()
+    private(set) var orderedKeys = [Key]()
+    private(set) var baseUrl: URL?
+    private var fileUrls = [LanguageCode: URL]()
     
-    init(entries: [Key: Translations] = [:]) {
-        self.entries = entries
-        self.keys = []
-        self.updateKeys()
+    init() {
     }
     
     init(fromDirectory url: URL) {
@@ -36,60 +34,58 @@ struct Document {
                 }
             }
         }
+        self.baseUrl = url
         
-        var dict = [String: [Line]]()
+        var entries = [Key: Translations]()
         
-        let regex = /\/(\w+)\.lproj/
-        
-        for fileURL in stringFiles {
-            guard let contents = try? String(contentsOf: fileURL) else {
+        for fileUrl in stringFiles {
+            guard let language = LanguageCode(fromUrl: fileUrl),
+                  let contents = try? String(contentsOf: fileUrl) else {
                 continue
             }
-
-            
-            let filePath = fileURL.absoluteString
-            guard let match = filePath.firstMatch(of: regex) else { continue }
-            let langCode = String(match.1)
-            
-            var lines = [Line]()
+            self.fileUrls[language] = fileUrl
+            self.languages.insert(language)
             
             let stringLines = contents.split(separator: "\n")
             
             for stringLine in stringLines {
                 guard stringLine.starts(with: "\""), let line = Line(fromStringsLine: String(stringLine)) else { continue }
                 
-                lines.append(line)
-            }
-            
-            dict[langCode] = lines
-            
-            self.fileURLs[langCode] = fileURL
-            self.languages.append(langCode)
-        }
-        
-        var entries = [Key: Translations]()
-        for (countryCode, lines) in dict {
-            for line in lines {
-                // This line is not readable and i don't care
-                entries[line.key, default: Translations()][countryCode] = line.translations
+                entries[line.key, default: Translations()][language] = line.translations
             }
         }
         
         self.entries = entries
-        self.keys = []
         self.updateKeys()
     }
     
     mutating func updateKeys() {
-        keys = entries.keys.sorted { a, b in
+        orderedKeys = entries.keys.sorted { a, b in
             return a < b
         }
     }
     
-    mutating func setTranslation(key: String, langCode: String, translation: String) {
-        let countPrev = entries.count
-        entries[key, default: Translations()][langCode] = translation
-        if entries.count != countPrev {
+    mutating func setTranslation(key: String, language: LanguageCode, translation: String) {
+        guard languages.contains(language) else { return }
+        
+        let needToUpdateKeys = entries[key] == nil
+        
+        entries[key, default: Translations()][language] = translation
+        
+        if needToUpdateKeys {
+            updateKeys()
+        }
+    }
+    
+    mutating func setTranslations(key: String, translations: Translations) {
+        let needToUpdateKeys = entries[key] == nil
+        
+        for language in languages {
+            let translation = translations[language] ?? key
+            entries[key, default: Translations()][language] = translation
+        }
+        
+        if needToUpdateKeys {
             updateKeys()
         }
     }
@@ -101,27 +97,46 @@ struct Document {
     
     func save() {
         for language in languages {
-            save(langCode: language)
+            save(language: language)
         }
     }
     
-    private func save(langCode: String) {
-        guard let url = self.fileURLs[langCode] else { return }
-        var lines = [Line]()
+    private func save(language: LanguageCode) {
+        guard let url = self.fileUrls[language] else { return }
         
-        for key in keys {
-            guard let Translations = self.entries[key]?[langCode] else { continue }
-            lines.append(.init(key: key, translations: Translations))
-        }
+        var fileContent = orderedKeys.compactMap { (key: Key) -> String? in
+            guard let translation = entries[key]?[language] else { return nil }
+            return Line(key: key, translations: translation).formatted
+        }.joined(separator: "\n")
         
-        let fileContent = lines.map(\.formatted).joined(separator: "\n")
+        fileContent.insert(contentsOf: Document.fileHeader, at: fileContent.startIndex)
+        
         try? fileContent.data(using: .utf8)?.write(to: url)
     }
 }
 
 extension Document {
+    
+    struct LanguageCode: Identifiable, Hashable, Equatable, Comparable {
+        static func < (lhs: Document.LanguageCode, rhs: Document.LanguageCode) -> Bool {
+            return lhs.string < rhs.string
+        }
+        
+        var id: String { string }
+        let string: String
+        
+        init(string: String) {
+            self.string = string
+        }
+        
+        init?(fromUrl url: URL) {
+            guard let match = url.absoluteString.firstMatch(of: /\/(\w+)\.lproj/) else { return nil }
+            self.string = String(match.1)
+        }
+    }
+    
     typealias Key = String
-    typealias Translations = [String: String]
+    typealias Translations = [LanguageCode: String]
     
     struct Line {
         let key: String
@@ -146,4 +161,14 @@ extension Document {
             self.translations = splitLine[1].trimmingCharacters(in: trimCharacterSet)
         }
     }
+}
+
+extension Document {
+    static let fileHeader: String = """
+//
+// Created with StringsFileEditor (https://github.com/otto001/StringsFileEditor)
+//
+
+
+"""
 }

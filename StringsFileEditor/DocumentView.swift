@@ -7,46 +7,42 @@
 
 import SwiftUI
 
-fileprivate let colWidth: CGFloat = 200
 
 fileprivate struct DocumentRowView: View {
-    @EnvironmentObject var viewModel: ViewModel
     
-    let key: Document.Key
-    
+    @EnvironmentObject var viewModel: DocumentViewModel
     var document: Document {
         viewModel.document!
     }
     
-    var languages: [String] {
-        return document.languages
-    }
-    
-    init(key: Document.Key) {
-        self.key = key
-    }
+    let key: Document.Key
+    var languages: [Document.LanguageCode]
+    let columnWidth: CGFloat
 
     var body: some View {
         let translations = document.entries[key] ?? Document.Translations()
         
         VStack(alignment: .leading) {
             HStack {
-                Text(key).frame(width: colWidth, alignment: .leading)
-                ForEach(languages, id: \.self) { langCode in
+                Text(key).frame(width: columnWidth, alignment: .leading)
+                ForEach(languages, id: \.self) { language in
                     
                     EditableText(text: Binding {
-                        return translations[langCode] ?? "-"
+                        return translations[language] ?? "-"
                     } set: { val, _ in
-                        viewModel.setTranslation(key: key, langCode: langCode, translation: val)
+                        viewModel.setTranslation(key: key, language: language, translation: val)
                     })
-                    .frame(width: colWidth, alignment: .leading)
+                    .frame(width: columnWidth, alignment: .leading)
                 }
+                
+                Spacer()
+                
                 Button(role: .destructive) {
                     viewModel.removeKey(key: key)
                 } label: {
                     Text("Remove")
                 }
-
+                .padding(.trailing, 12)
             }
             Divider()
         }
@@ -54,41 +50,96 @@ fileprivate struct DocumentRowView: View {
 }
 
 
+fileprivate struct DocumentTable: View {
+    @State var search: String = ""
+    
+    let geo: GeometryProxy
+    let document: Document
+    
+    var languages: [Document.LanguageCode] {
+        return Array(document.languages).sorted()
+    }
+    
+    var listWidth: CGFloat {
+        geo.size.width
+    }
+    
+    var columnWidth: CGFloat {
+        return (listWidth - 200) / CGFloat(languages.count + 1)
+    }
+    
+    var orderedKeys: [Document.Key] {
+        return document.orderedKeys
+    }
+    
+    var filteredKeys: [Document.Key] {
+        guard !search.isEmpty else { return orderedKeys }
+        return orderedKeys.filter { key in
+            return key.contains(search)
+        }
+    }
+    
+    var body: some View {
+        List(filteredKeys, id: \.self) { key in
+            DocumentRowView(key: key, languages: languages, columnWidth: columnWidth)
+        }
+        .searchable(text: $search)
+        .frame(width: listWidth)
+        .padding(.top, 30)
+        .overlay(alignment: .topLeading) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("Key").frame(width: columnWidth, alignment: .leading).padding(.leading)
+                    ForEach(languages) { language in
+                        Text(language.string).frame(width: columnWidth, alignment: .leading)
+                    }
+                }
+                .frame(width: listWidth, alignment: .leading)
+                .padding(.vertical, 8)
+                
+                Divider()
+            }
+            .frame(width: listWidth, alignment: .leading)
+            
+            .background(Material.ultraThin)
+        }
+    }
+}
+
 struct DocumentView: View {
-    @EnvironmentObject var viewModel: ViewModel
+    @EnvironmentObject var viewModel: DocumentViewModel
     
     var document: Document {
         viewModel.document!
     }
-    
-    var languages: [String] {
-        return document.languages
+
+    var navigationTitle: String {
+        return document.baseUrl?.relativePath ?? "Strings File Editor"
     }
 
     var body: some View {
-        List(document.keys, id: \.self) { key in
-            DocumentRowView(key: key)
+        GeometryReader { geo in
+            DocumentTable(geo: geo, document: document)
         }
-        .padding(.top, 30)
-        .overlay(alignment: .topLeading) {
-            HStack {
-                Text("Key").frame(width: colWidth, alignment: .leading)
-                ForEach(languages, id: \.self) { langCode in
-                    Text(langCode).frame(width: colWidth, alignment: .leading)
+        .toolbarRole(.editor)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    viewModel.showAddRowDialog = true
+                } label: {
+                    Label("Add Row", systemImage: "plus")
                 }
             }
-            .padding(.horizontal)
-            .padding(.vertical, 8)
-            .background(Material.regular)
         }
         .sheet(isPresented: $viewModel.showAddRowDialog) {
             AddRowView()
         }
+        .navigationTitle(navigationTitle)
     }
 }
 
 struct DocumentView_Previews: PreviewProvider {
     static var previews: some View {
-        DocumentView().environmentObject(ViewModel.preview)
+        DocumentView().environmentObject(DocumentViewModel.preview)
     }
 }

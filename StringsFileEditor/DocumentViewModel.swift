@@ -8,11 +8,12 @@
 import Foundation
 import AppKit
 
-class ViewModel: ObservableObject {
+class DocumentViewModel: ObservableObject {
     @Published var document: Document?
     
     @Published var showAddRowDialog: Bool = false
     
+    private var undoRedoMaximum = 64
     private var undoStack = [Document]()
     private var redoStack = [Document]()
     
@@ -54,7 +55,7 @@ class ViewModel: ObservableObject {
     private func storeUndo(clearRedo: Bool = true) {
         guard let document = self.document else { return }
         self.undoStack.append(document)
-        if self.undoStack.count > 32 {
+        if self.undoStack.count > self.undoRedoMaximum {
             self.undoStack = Array(self.undoStack[1...])
         }
         if clearRedo {
@@ -65,7 +66,7 @@ class ViewModel: ObservableObject {
     private func storeRedo() {
         guard let document = self.document else { return }
         self.redoStack.append(document)
-        if self.redoStack.count > 32 {
+        if self.redoStack.count > self.undoRedoMaximum {
             self.redoStack = Array(self.redoStack[1...])
         }
     }
@@ -82,18 +83,14 @@ class ViewModel: ObservableObject {
         self.document = document
     }
     
-    func setTranslation(key: String, langCode: String, translation: String) {
-        self.storeUndo(clearRedo: false)
-        self.document?.setTranslation(key: key, langCode: langCode, translation: translation)
+    func setTranslation(key: String, language: Document.LanguageCode, translation: String) {
+        self.storeUndo()
+        self.document?.setTranslation(key: key, language: language, translation: translation)
     }
     
-    func addKey(key: String, translations: Document.Translations) {
-        guard let document = self.document else { return }
+    func setTranslations(key: String, translations: Document.Translations) {
         self.storeUndo()
-        for language in document.languages {
-            let translation = translations[language] ?? key
-            self.document?.setTranslation(key: key, langCode: language, translation: translation)
-        }
+        self.document?.setTranslations(key: key, translations: translations)
     }
     
     func removeKey(key: String) {
@@ -107,24 +104,27 @@ class ViewModel: ObservableObject {
 }
 
 
-extension ViewModel {
-    static var preview: ViewModel {
+extension DocumentViewModel {
+    static var preview: DocumentViewModel {
         var document = Document()
-        document.setTranslation(key: "hello", langCode: "en", translation: "Hello")
-        document.setTranslation(key: "hello", langCode: "de", translation: "Hallo")
         
-        document.setTranslation(key: "bye", langCode: "en", translation: "Bye")
-        document.setTranslation(key: "bye", langCode: "de", translation: "Tschüss")
+        let en = Document.LanguageCode(string: "en")
+        let de = Document.LanguageCode(string: "de")
         
-        document.setTranslation(key: "yes", langCode: "en", translation: "Yes")
-        document.setTranslation(key: "yes", langCode: "de", translation: "Ja")
+        document.setTranslation(key: "hello", language: en, translation: "Hello")
+        document.setTranslation(key: "hello", language: de, translation: "Hallo")
         
-        document.setTranslation(key: "no", langCode: "en", translation: "No")
-        document.setTranslation(key: "no", langCode: "de", translation: "Nein")
+        document.setTranslation(key: "bye", language: en, translation: "Bye")
+        document.setTranslation(key: "bye", language: de, translation: "Tschüss")
         
-        document.languages = ["en", "de"]
+        document.setTranslation(key: "yes", language: en, translation: "Yes")
+        document.setTranslation(key: "yes", language: de, translation: "Ja")
         
-        let viewModel = ViewModel()
+        document.setTranslation(key: "no", language: en, translation: "No")
+        document.setTranslation(key: "no", language: de, translation: "Nein")
+        
+        
+        let viewModel = DocumentViewModel()
         viewModel.document = document
         return viewModel
     }
